@@ -6,22 +6,24 @@ import Keyboard from './Keyboard';
 import Person from './Person';
 
 export default function Game() {
-
-    //handle input
-    //show guessed letters
-    //set letters visibility?
-    console.log('render');
-    const [word, setWord] = useState<string>(randomWords(1)[0]); //I want to try and not make the Game component re-render... ?
+    const [word, setWord] = useState<string>(randomWords(1)[0]);
     const [guessed, setGuessed] = useState<string[]>([]);
-    const [guessNumber, setGuessNumber] = useState(-1);
+    const [guessNumber, setGuessNumber] = useState<number>(-1);
+    const [gameOver, setGameOver] = useState<boolean>(false);
 
     const handleGuess = useCallback((key: string) => {
         if(!guessed.includes(key)) {
             setGuessed([...guessed, key]);
+            if (!word.includes(key)) {
+                setGuessNumber(() => {
+                    if(guessNumber + 1 === 6) {
+                        setGameOver(true);
+                    }
+                    return guessNumber + 1
+                });
+            }
         }
-        if(!word.includes(key)) {
-          setGuessNumber(() => guessNumber+1);
-        }
+
         console.log('guess', guessNumber);
     }, [setGuessed, guessed, word, guessNumber]);
 
@@ -37,17 +39,17 @@ export default function Game() {
         setWord(randomWords(1)[0]);
         setGuessed([]);
         setGuessNumber(-1);
+        setGameOver(false);
     };
 
   return (
     <div>
-        {/* hangman figure */}
         <Person guessNumber={guessNumber}/>
         {word.split('').map((letter, i) => {
-            return <Letter key={i} value={letter} visible={guessed.includes(letter)}/>
+            return <Letter key={i} value={letter} visible={gameOver || guessed.includes(letter)}/>
         })}
         <Keyboard handleGuess={handleGuess} guessed={guessed}/>
-        <button onClick={reset}>Reset</button>
+        {gameOver && <button onClick={reset}>New Game?</button>}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import {useState, useCallback} from 'react'
+import {useState, useCallback, useEffect} from 'react'
 import randomWords from 'random-words';
 import useEventListener from '@use-it/event-listener';
 import Letter from './Letter';
@@ -10,6 +10,18 @@ export default function Game() {
     const [guessed, setGuessed] = useState<string[]>([]);
     const [guessNumber, setGuessNumber] = useState<number>(-1);
     const [gameOver, setGameOver] = useState<boolean>(false);
+    const [gameWon, setGameWon] = useState<boolean>(false);
+    const dedupedWordArray = Array.from(new Set(word.split('')));
+    let containsAll = false;
+
+    useEffect(() => {
+        containsAll = dedupedWordArray.every(element => {
+            return guessed.includes(element);
+        });
+        if(containsAll) {
+            setGameWon(true);
+        }
+    }, [guessed]);
 
     const handleGuess = useCallback((key: string) => {
         if(!guessed.includes(key)) {
@@ -23,13 +35,10 @@ export default function Game() {
                 });
             }
         }
-
-        console.log('guess', guessNumber);
     }, [setGuessed, guessed, word, guessNumber]);
 
     const detectKeyDown = useCallback(
         (e: KeyboardEvent) => {
-            console.log('hello', e.key);
             handleGuess(e.key);
         }, [handleGuess]);
 
@@ -49,7 +58,8 @@ export default function Game() {
             return <Letter key={i} value={letter} visible={gameOver || guessed.includes(letter)}/>
         })}
         <Keyboard handleGuess={handleGuess} guessed={guessed}/>
-        {gameOver && <button onClick={reset}>New Game?</button>}
+        {gameWon && <h2>You win!</h2>}
+        {gameOver || gameWon && <button onClick={reset}>New Game?</button>}
     </div>
   )
 }
